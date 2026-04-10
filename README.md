@@ -160,7 +160,7 @@ Then use the Rezi MCP server to call the resume tools.
 
 ## How resume access works
 
-`list_resumes` queries Firestore for resumes that belong to the authenticated Rezi user and returns a compact summary list so the response stays small. `read_resume` returns the complete stored resume document. `write_resume` writes back through the same authenticated user context and supports both create and update flows.
+`list_resumes` returns resumes that belong to the authenticated Rezi user as a compact summary list so the response stays small. `read_resume` returns the complete stored resume document. `write_resume` writes back through the same authenticated user context and supports both create and update flows.
 
 On updates, Rezi MCP first reads the existing resume and verifies that it belongs to the authenticated user before writing changes.
 
