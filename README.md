@@ -1,93 +1,24 @@
-# Rezi MCP Server
+# Rezi MCP
 
-The Rezi Model Context Protocol (MCP) server lets AI tools connect to a user's Rezi account and work directly with resume data. Instead of copying resume JSON into chat, users can access their resumes, read them, and write updates back to Rezi through MCP.
-
-## Remote server
-
-### Who can use this feature
-
-- Any Rezi user with a Rezi account.
-- Any MCP client that supports remote streamable HTTP servers and interactive tool use.
-
-Examples include Codex, Claude Code, Claude Desktop, Cursor, Gemini CLI, Lovable, and other MCP clients with remote HTTP support.
+Rezi MCP lets supported AI clients connect to your Rezi account so they can read your resumes, update them, and look up jobs while helping you tailor an application.
 
 ## Server URL
-
-MCP Server URL: `https://api.rezi.ai/mcp`
-
-## Available tools and capabilities
-
-Tool name | Description
---- | ---
-`list_resumes` | Returns the authenticated user's resumes as lightweight summaries with ID, name, job title, and last updated time.
-`read_resume` | Returns the full JSON document for a single resume by `resume_id`.
-`write_resume` | Creates a new resume when `resume_id` is omitted, or updates an existing resume when `resume_id` is provided.
-
-### Resume write shape
-
-`write_resume` expects a `resume` object that follows the Rezi resume schema. In practice, the important top-level fields are:
-
-- `name`
-- `jobTitle`
-- `jobDescription`
-- `jobCompany`
-- `template`
-- `data`
-
-The `data` object includes sections such as `contact`, `summary`, `experience`, `education`, `skills`, `projects`, `certification`, `coursework`, `involvement`, and `awards`. Collection-style sections should use UUID keys, plus `index` for ordering and `hide` for visibility.
-
-## Implementation instructions
-
-### Codex
-
-1. Add the MCP server:
-
-```bash
-codex mcp add rezi --url https://api.rezi.ai/mcp
-```
-
-2. Verify it is configured:
-
-```bash
-codex mcp list
-```
-
-3. Start Codex and use the Rezi MCP server.
-
-### Claude Code
-
-1. Add the MCP server:
-
-```bash
-claude mcp add rezi --transport http https://api.rezi.ai/mcp
-```
-
-2. Start Claude Code:
-
-```bash
-claude
-```
-
-3. Use the Rezi MCP server from Claude Code.
-
-### Claude Desktop
-
-1. Open Claude Desktop.
-2. Go to `Customize > Connectors`.
-3. Add a new custom connector for the Rezi MCP server.
-4. Set the server URL to:
 
 ```text
 https://api.rezi.ai/mcp
 ```
 
-5. Complete authorization if Claude prompts for it, then use the Rezi MCP server from Claude Desktop.
+## Connect
 
-Note: for remote MCP servers, Claude Desktop uses Connectors. Do not add this remote server through `claude_desktop_config.json`.
+### Claude Code
+
+```bash
+claude mcp add rezi --transport http https://api.rezi.ai/mcp
+```
 
 ### Cursor
 
-Add this configuration to your `mcp.json`:
+Add this to your `mcp.json`:
 
 ```json
 {
@@ -100,69 +31,54 @@ Add this configuration to your `mcp.json`:
 }
 ```
 
-After saving the config, restart Cursor if needed, then use the Rezi MCP server from Cursor.
+### Any compatible MCP client
 
-### Gemini CLI
-
-1. Add the MCP server:
-
-```bash
-gemini mcp add --transport http rezi https://api.rezi.ai/mcp
-```
-
-2. Verify it is configured:
-
-```bash
-gemini mcp list
-```
-
-3. Start Gemini CLI and use the Rezi MCP server.
-
-You can also add the server manually in `~/.gemini/settings.json`:
-
-```json
-{
-  "mcpServers": {
-    "rezi": {
-      "httpUrl": "https://api.rezi.ai/mcp"
-    }
-  }
-}
-```
-
-### Lovable
-
-Lovable supports custom MCP servers as personal connectors on paid plans.
-
-1. Open Lovable.
-2. Go to `Settings -> Connectors -> Personal connectors`.
-3. Click `New MCP server`.
-4. Set the server name to `Rezi` or another name you prefer.
-5. Set the server URL to:
+If your client supports remote streamable HTTP MCP servers, point it to:
 
 ```text
 https://api.rezi.ai/mcp
 ```
 
-6. Choose the appropriate authentication method if prompted, then add the server.
+## First-time sign in
 
-After that, the Rezi MCP server is available to Lovable as a personal connector.
+The first time your MCP client tries to use a Rezi tool, it opens the Rezi login flow in your browser. After you sign in, the client stores the access token and keeps using it until it expires. In normal use, you only need to sign in again when that token expires or if you reconnect the server.
 
-### Any streamable HTTP MCP client
+## Available tools
 
-If your MCP client supports remote streamable HTTP servers, point it at:
+| Tool | What it does |
+|------|--------------|
+| `list_resumes` | Shows your resumes, ordered by most recently updated. |
+| `read_resume` | Returns the full JSON for a specific resume. |
+| `write_resume` | Creates a new resume or updates an existing one. |
+| `search_jobs` | Searches job listings by role and location. |
+| `get_job_details` | Fetches the full details for a job found through `search_jobs`. |
 
-```text
-https://api.rezi.ai/mcp
-```
+## Typical workflows
 
-Then use the Rezi MCP server to call the resume tools.
+### Update an existing resume
 
-## How resume access works
+1. Use `list_resumes` to find the right resume.
+2. Use `read_resume` to load it.
+3. Ask your AI client to make changes.
+4. Use `write_resume` with the updated fields.
 
-`list_resumes` returns resumes that belong to the authenticated Rezi user as a compact summary list so the response stays small. `read_resume` returns the complete stored resume document. `write_resume` writes back through the same authenticated user context and supports both create and update flows.
+When updating, only the fields you send are changed. Sections you do not include are preserved.
 
-On updates, Rezi MCP first reads the existing resume and verifies that it belongs to the authenticated user before writing changes.
+### Create a new resume
+
+Call `write_resume` without `resume_id`. Rezi creates a new resume and fills in the standard defaults needed for it to work correctly in the product.
+
+### Tailor a resume to a job
+
+1. Use `search_jobs` to find a role.
+2. Use `get_job_details` to read the full posting.
+3. Use `read_resume` to load your current resume.
+4. Ask your AI client to tailor the resume for that job.
+5. Use `write_resume` to save the result.
+
+## Notes
+
+- You need an active Rezi subscription to use the tools.
 
 ## Session behavior and security
 
