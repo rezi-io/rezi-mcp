@@ -31,6 +31,16 @@ Add this to your `mcp.json`:
 }
 ```
 
+### AdaL CLI
+
+Start `adal`, then enter this AdaL slash command in the AdaL chat input (not your system shell):
+
+```text
+/mcp add rezi --transport http --url https://api.rezi.ai/mcp
+```
+
+If authentication does not open automatically, enter `/mcp`, select `rezi`, and choose **Authenticate**.
+
 ### Any compatible MCP client
 
 If your client supports remote streamable HTTP MCP servers, point it to:
