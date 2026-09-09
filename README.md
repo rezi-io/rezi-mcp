@@ -12,9 +12,28 @@ https://api.rezi.ai/mcp
 
 ### Claude Code
 
+Install the Rezi plugin to get the MCP connection plus resume-tailoring and job-search workflows. Run inside Claude Code:
+
+```text
+/plugin marketplace add rezi-io/rezi-mcp
+/plugin install rezi@rezi-plugins
+```
+
+Follow the installation prompts, reload plugins if requested, and open `/mcp` to sign in to Rezi. Then try `/rezi:tailor-resume` or `/rezi:find-jobs`. See the [plugin guide](plugins/rezi/README.md) for examples and setup details.
+
+To connect just the MCP server without installing the plugin, run in your terminal:
+
 ```bash
 claude mcp add rezi --transport http https://api.rezi.ai/mcp
 ```
+
+Open `/mcp` inside Claude Code to complete authentication. Choose either the plugin or the direct connection to avoid duplicate Rezi tools.
+
+### Claude web, Desktop, and Cowork
+
+Open Claude's connector settings and add a custom connector with URL `https://api.rezi.ai/mcp`. Sign in to Rezi and approve the consent screen. Available connector settings depend on your Claude plan and organization permissions.
+
+The custom connector provides the Rezi tools. The plugin additionally bundles workflow skills for supported Claude surfaces. See [publishing on Claude](docs/claude-publishing.md) for the separate directory-submission steps; this repository's marketplace does not imply Anthropic listing or verification.
 
 ### Cursor
 
@@ -48,7 +67,8 @@ The first time your MCP client tries to use a Rezi tool, it opens the Rezi login
 | Tool | What it does |
 |------|--------------|
 | `list_resumes` | Shows your resumes, ordered by most recently updated. |
-| `read_resume` | Returns the full JSON for a specific resume. |
+| `read_resume` | Returns editable resume content and summary metadata for a specific resume, excluding internal persistence fields. |
+| `get_resume_format` | Describes supported resume sections and content fields. Use it before preparing writes. |
 | `write_resume` | Creates a new resume or updates an existing one. |
 | `search_jobs` | Searches job listings by role and location. |
 | `get_job_details` | Fetches the full details for a job found through `search_jobs`. |
@@ -59,32 +79,46 @@ The first time your MCP client tries to use a Rezi tool, it opens the Rezi login
 
 1. Use `list_resumes` to find the right resume.
 2. Use `read_resume` to load it.
-3. Ask your AI client to make changes.
-4. Use `write_resume` with the updated fields.
+3. Use `get_resume_format` to check the current content format.
+4. Ask your AI client to make changes.
+5. Use `write_resume` with the existing `resume_id` and only the updated fields, then read the resume back to verify.
 
 When updating, only the fields you send are changed. Sections you do not include are preserved.
 
 ### Create a new resume
 
-Call `write_resume` without `resume_id`. Rezi creates a new resume and fills in the standard defaults needed for it to work correctly in the product.
+Call `get_resume_format` to check the current content format, then call `write_resume` without `resume_id`. Rezi creates a new resume and fills in the standard defaults needed for it to work correctly in the product. Reuse the returned ID for subsequent updates.
 
 ### Tailor a resume to a job
 
 1. Use `search_jobs` to find a role.
 2. Use `get_job_details` to read the full posting.
 3. Use `read_resume` to load your current resume.
-4. Ask your AI client to tailor the resume for that job.
-5. Use `write_resume` to save the result.
+4. Use `get_resume_format` and ask your AI client to tailor the resume for that job.
+5. Use `write_resume` with the existing resume ID to save the requested changes, then read the resume back to verify.
 
 ## Notes
 
-- You need an active Rezi subscription to use the tools.
+- You need a Rezi account with access to the MCP feature. See the [current Rezi setup guide](https://www.rezi.ai/rezi-docs/resume-mcp-server) for account requirements.
 
-## Session behavior and security
+## Authentication and data access
 
-- Credentials are stored in memory and scoped to the MCP session ID assigned by the HTTP server.
-- Session credentials are refreshed automatically when they are close to expiry.
-- Resume reads and writes are performed using the authenticated user's Rezi session context.
-- The service does not persist credentials to disk. If the service restarts, the user needs to sign in again.
+- Rezi uses OAuth with a browser consent flow, dynamic client registration, and S256 PKCE.
+- The MCP client manages its stored access token. Rezi stores a hashed, revocable credential using its MCP key store.
+- The current server issues 30-day access tokens and does not issue refresh tokens. Reconnect when a token expires or is revoked.
+- Resume reads and writes are authorized against the signed-in account's ownership. The server uses stateless Streamable HTTP; authorization is not tied to one server process or an in-memory MCP session.
+- Resume content and tool inputs and outputs pass between the AI client and Rezi to perform requested tasks. Never put account passwords or access tokens in public issues or plugin configuration committed to GitHub.
 
-This design keeps access aligned with the user's own Rezi permissions rather than introducing a separate privileged backend identity for resume operations.
+See [Rezi's privacy policy and terms](https://www.rezi.ai/legal), the [MCP setup guide](https://www.rezi.ai/rezi-docs/resume-mcp-server), or contact [support@rezi.io](mailto:support@rezi.io).
+
+## Plugin development
+
+The marketplace catalog is `.claude-plugin/marketplace.json`. The self-contained Claude plugin lives in `plugins/rezi`; it includes the remote MCP connection and two workflow skills, with no local server or install scripts.
+
+```bash
+claude plugin validate --strict ./plugins/rezi
+claude plugin validate --strict ./.claude-plugin/marketplace.json
+claude --plugin-dir ./plugins/rezi
+```
+
+See [publishing on Claude](docs/claude-publishing.md) for testing and directory submission. Manifest validation alone does not verify login or tool execution.
