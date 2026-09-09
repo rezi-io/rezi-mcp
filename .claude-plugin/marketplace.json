@@ -1,0 +1,17 @@
+{
+  "name": "rezi-plugins",
+  "description": "Rezi plugins for resume tailoring and job search in Claude.",
+  "owner": {
+    "name": "Rezi",
+    "url": "https://www.rezi.ai"
+  },
+  "plugins": [
+    {
+      "name": "rezi",
+      "source": "./plugins/rezi",
+      "description": "Connect your Rezi account to tailor resumes and find matching jobs.",
+      "category": "productivity",
+      "tags": ["resumes", "job-search", "career"]
+    }
+  ]
+}

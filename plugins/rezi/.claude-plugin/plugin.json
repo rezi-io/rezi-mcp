@@ -1,0 +1,12 @@
+{
+  "name": "rezi",
+  "version": "1.0.0",
+  "description": "Connect your Rezi account to tailor resumes and find matching jobs.",
+  "author": {
+    "name": "Rezi",
+    "url": "https://www.rezi.ai"
+  },
+  "homepage": "https://www.rezi.ai/rezi-docs/resume-mcp-server",
+  "repository": "https://github.com/rezi-io/rezi-mcp",
+  "keywords": ["rezi", "resume", "job-search", "career", "mcp"]
+}
