@@ -46,7 +46,14 @@ Configure the Rezi MCP server separately in AdaL. The workflow skills need that 
 
 Open `/mcp` to authenticate, then `/skills` to check that the workflows are available. If Rezi is already configured in AdaL, skip the `/mcp add` command. Installing the workflow skills and configuring MCP are separate steps.
 
-You can also reference either public skill directory directly with the [@skills protocol](https://atskills.one/what-is-atskills): [tailor-resume](plugins/rezi/skills/tailor-resume/SKILL.md) and [find-jobs](plugins/rezi/skills/find-jobs/SKILL.md).
+You can also reference either public skill directory directly with the [@skills protocol](https://atskills.one/what-is-atskills), without installing the plugin:
+
+```text
+@skills:gh:rezi-io/rezi-mcp/plugins/rezi/skills/tailor-resume
+@skills:gh:rezi-io/rezi-mcp/plugins/rezi/skills/find-jobs
+```
+
+The corresponding skill files are [tailor-resume](plugins/rezi/skills/tailor-resume/SKILL.md) and [find-jobs](plugins/rezi/skills/find-jobs/SKILL.md).
 
 ### Claude web, Desktop, and Cowork
 
